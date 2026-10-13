@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>وتر — Watar</title>
+<meta name="theme-color" content="#150b24">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="وتر">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icons/icon-192.png">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  :root{
+    --bg0:#0c0614; --bg1:#1b0f2e;
+    --p1:#a855f7; --p2:#7c3aed; --p3:#d8b4fe;
+    --txt:#f4f0fa; --mut:#b9a8d6;
+    --card:rgba(255,255,255,.055); --brd:rgba(168,85,247,.22);
+  }
+  html,body{ height:100%; }
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Tahoma,Arial,sans-serif;
+    color:var(--txt);
+    background:
+      radial-gradient(120% 60% at 80% -10%, rgba(168,85,247,.28), transparent 60%),
+      radial-gradient(100% 50% at 10% 110%, rgba(124,58,237,.20), transparent 60%),
+      linear-gradient(180deg,var(--bg1),var(--bg0));
+    background-attachment:fixed;
+    min-height:100dvh; padding-bottom:calc(86px + env(safe-area-inset-bottom));
+  }
+  header{
+    position:sticky; top:0; z-index:20;
+    padding:calc(12px + env(safe-area-inset-top)) 18px 12px;
+    background:rgba(12,6,20,.72); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+    border-bottom:1px solid rgba(168,85,247,.16);
+    display:flex; align-items:center; gap:12px;
+  }
+  header img{ width:46px; height:46px; border-radius:14px; box-shadow:0 4px 18px rgba(168,85,247,.45); }
+  header h1{ font-size:22px; font-weight:800; letter-spacing:.5px;
+    background:linear-gradient(90deg,#e9d5ff,#a855f7); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  header p{ font-size:11px; color:var(--mut); margin-top:2px; }
+  main{ padding:16px 16px 8px; max-width:640px; margin:0 auto; }
+  .view{ display:none; animation:fade .25s ease; }
+  .view.on{ display:block; }
+  @keyframes fade{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;} }
+  h2.sec{ font-size:17px; font-weight:700; margin:6px 2px 12px; display:flex; align-items:center; gap:8px; }
+  h2.sec svg{ width:20px; height:20px; color:var(--p3); }
+  .grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .card{
+    background:var(--card); border:1px solid var(--brd); border-radius:20px;
+    padding:14px; cursor:pointer; position:relative; overflow:hidden;
+    backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+    transition:transform .15s ease, border-color .15s ease;
+  }
+  .card:active{ transform:scale(.97); border-color:var(--p1); }
+  .tile{ height:96px; border-radius:14px; display:flex; align-items:center; justify-content:center; margin-bottom:10px; }
+  .tile svg{ width:52px; height:52px; filter:drop-shadow(0 4px 10px rgba(0,0,0,.45)); }
+  .tile.kaaba{ background:linear-gradient(135deg,#2a1a4a,#120a24); }
+  .tile.mosque{ background:linear-gradient(135deg,#3b2368,#160d2c); }
+  .tile.generic{ background:linear-gradient(135deg,var(--p2),#3b1470); }
+  .card h3{ font-size:15px; font-weight:700; }
+  .card p{ font-size:12px; color:var(--mut); margin-top:3px; }
+  .live-dot{ position:absolute; top:12px; left:12px; display:flex; align-items:center; gap:6px;
+    background:rgba(239,68,68,.14); border:1px solid rgba(239,68,68,.4);
+    color:#fca5a5; font-size:11px; font-weight:700; padding:4px 10px; border-radius:99px; }
+  .live-dot i{ width:8px; height:8px; border-radius:50%; background:#ef4444; animation:pulse 1.4s infinite; }
+  @keyframes pulse{ 0%,100%{opacity:1; transform:scale(1);} 50%{opacity:.4; transform:scale(.75);} }
+  .addbtn{
+    margin-top:12px; width:100%; padding:14px; border-radius:18px; cursor:pointer;
+    border:1.5px dashed rgba(168,85,247,.5); background:transparent; color:var(--p3);
+    font-size:14px; font-weight:700; font-family:inherit;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+  }
+  .addbtn svg{ width:18px; height:18px; }
+  .addbtn:active{ background:rgba(168,85,247,.12); }
+  .sheet{ background:var(--card); border:1px solid var(--brd); border-radius:20px; padding:16px; margin-top:12px; display:none; }
+  .sheet.on{ display:block; animation:fade .25s ease; }
+  .sheet input{
+    width:100%; padding:13px 14px; border-radius:14px; margin-bottom:10px;
+    border:1px solid rgba(168,85,247,.3); background:rgba(0,0,0,.3); color:var(--txt);
+    font-size:14px; font-family:inherit; outline:none;
+  }
+  .sheet input:focus{ border-color:var(--p1); }
+  .btn{
+    width:100%; padding:14px; border:none; border-radius:16px; cursor:pointer;
+    background:linear-gradient(135deg,var(--p1),var(--p2)); color:#fff;
+    font-size:15px; font-weight:800; font-family:inherit;
+    box-shadow:0 6px 22px rgba(168,85,247,.4);
+  }
+  .btn:active{ transform:scale(.98); }
+  .btn.ghost{ background:rgba(168,85,247,.14); box-shadow:none; border:1px solid var(--brd); color:var(--p3); margin-top:8px; }
+  .song{ display:flex; align-items:center; gap:12px; padding:12px; border-radius:16px;
+    background:var(--card); border:1px solid var(--brd); margin-bottom:10px; cursor:pointer; }
+  .song:active{ transform:scale(.98); }
+  .song .n{ width:42px; height:42px; border-radius:12px; flex:none;
+    background:linear-gradient(135deg,var(--p1),var(--p2));
+    display:flex; align-items:center; justify-content:center; }
+  .song .n svg{ width:22px; height:22px; color:#fff; }
+  .song.playing .n{ animation:pulse 1.4s infinite; }
+  .song h4{ font-size:14px; font-weight:700; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .song .del{ background:none; border:none; color:var(--mut); font-size:18px; cursor:pointer; padding:6px; }
+  .empty{ text-align:center; color:var(--mut); font-size:13px; padding:26px 10px; line-height:1.9; }
+  .empty svg{ width:44px; height:44px; color:var(--p1); opacity:.7; margin-bottom:8px; }
+  /* player */
+  #playerWrap{ display:none; }
+  #playerWrap.on{ display:block; animation:fade .25s ease; }
+  .phead{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  .back{ background:var(--card); border:1px solid var(--brd); color:var(--txt);
+    width:40px; height:40px; border-radius:12px; font-size:18px; cursor:pointer; }
+  .phead h3{ font-size:16px; font-weight:800; }
+  .frame{ border-radius:20px; overflow:hidden; border:1px solid var(--brd);
+    box-shadow:0 10px 40px rgba(0,0,0,.5); aspect-ratio:16/9; background:#000; }
+  .frame iframe{ width:100%; height:100%; border:0; display:block; }
+  /* now playing bar */
+  #np{ position:fixed; bottom:calc(86px + env(safe-area-inset-bottom)); right:12px; left:12px; z-index:30;
+    display:none; align-items:center; gap:12px; padding:12px 14px; border-radius:20px;
+    background:rgba(30,16,52,.92); border:1px solid var(--brd);
+    backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+    box-shadow:0 10px 34px rgba(0,0,0,.55); max-width:616px; margin:0 auto; }
+  #np.on{ display:flex; animation:fade .25s ease; }
+  #np img{ width:46px; height:46px; border-radius:12px; }
+  #np .t{ flex:1; min-width:0; }
+  #np .t h4{ font-size:13px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #np .bar{ height:3px; background:rgba(255,255,255,.14); border-radius:99px; margin-top:6px; overflow:hidden; }
+  #np .bar i{ display:block; height:100%; width:0; background:linear-gradient(90deg,var(--p1),var(--p3)); border-radius:99px; }
+  #np button{ background:rgba(168,85,247,.18); border:1px solid var(--brd); color:#fff;
+    width:42px; height:42px; border-radius:50%; cursor:pointer; flex:none;
+    display:flex; align-items:center; justify-content:center; }
+  #np button svg{ width:18px; height:18px; }
+  #np button.main{ width:50px; height:50px;
+    background:linear-gradient(135deg,var(--p1),var(--p2)); border:none;
+    box-shadow:0 4px 16px rgba(168,85,247,.5); }
+  #np button.main svg{ width:22px; height:22px; }
+  /* tab bar */
+  nav{ position:fixed; bottom:0; right:0; left:0; z-index:40;
+    padding:10px 16px calc(10px + env(safe-area-inset-bottom));
+    background:rgba(12,6,20,.82); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+    border-top:1px solid rgba(168,85,247,.16);
+    display:flex; }
+  nav button{ flex:1; background:none; border:none; color:var(--mut); cursor:pointer;
+    font-family:inherit; font-size:11px; font-weight:700; padding:6px;
+    display:flex; flex-direction:column; align-items:center; gap:4px; }
+  nav button svg{ width:24px; height:24px; }
+  nav button.on{ color:var(--p3); }
+  #hiddenPlayer{ position:absolute; width:1px; height:1px; overflow:hidden; opacity:0; pointer-events:none; }
+.searchbar{ display:flex; gap:8px; margin-bottom:14px; }
+  .searchbar input{ flex:1; padding:13px 16px; border-radius:99px; border:1px solid rgba(168,85,247,.3); background:rgba(0,0,0,.3); color:var(--txt); font-size:14px; font-family:inherit; outline:none; min-width:0; }
+  .searchbar input:focus{ border-color:var(--p1); }
+  .searchbar button{ width:48px; height:48px; border-radius:50%; border:none; cursor:pointer; background:linear-gradient(135deg,var(--p1),var(--p2)); color:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 16px rgba(168,85,247,.4); flex:none; }
+  .searchbar button svg{ width:20px; height:20px; }
+  .res{ display:flex; gap:12px; align-items:center; padding:10px; border-radius:16px; background:var(--card); border:1px solid var(--brd); margin-bottom:10px; cursor:pointer; }
+  .res img{ width:112px; aspect-ratio:16/9; object-fit:cover; border-radius:10px; flex:none; background:#000; }
+  .res .t{ flex:1; min-width:0; }
+  .res h4{ font-size:13px; font-weight:700; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; line-height:1.5; }
+  .res p{ font-size:11px; color:var(--mut); margin-top:4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .res .fav{ background:none; border:none; cursor:pointer; color:var(--p3); padding:8px; flex:none; }
+  .res .fav svg{ width:22px; height:22px; }
+  .res .fav.on{ color:#f472b6; }
+  .res .fav.on svg{ fill:#f472b6; }
+  .spin{ text-align:center; padding:24px; color:var(--mut); font-size:13px; }
+  .spin i{ display:inline-block; width:22px; height:22px; border:3px solid rgba(168,85,247,.3); border-top-color:var(--p1); border-radius:50%; animation:rot .8s linear infinite; vertical-align:-6px; margin-left:8px; }
+  @keyframes rot{ to{ transform:rotate(360deg);} }
+</style>
+</head>
+<body>
+
+<header>
+  <img src="icons/icon-192.png" alt="وتر">
+  <div><h1>وتر</h1><p>كل نغمة لها إحساس</p></div>
+</header>
+
+<main>
+  <!-- LIVE VIEW -->
+  <section id="v-live" class="view on">
+    <h2 class="sec"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="2" fill="currentColor" stroke="none"/><path d="M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8"/></svg> البث المباشر</h2>
+    <div class="grid" id="liveGrid"></div>
+    <button class="addbtn" id="addLiveBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg> أضيفي قناة بث من يوتيوب</button>
+    <div class="sheet" id="liveSheet">
+      <input id="liveUrl" placeholder="الصقي رابط البث من يوتيوب هنا…">
+      <input id="liveName" placeholder="اسم القناة (مثال: قناة اقرأ)">
+      <button class="btn" id="saveLive">حفظ القناة</button>
+      <button class="btn ghost" id="cancelLive">إلغاء</button>
+    </div>
+    <div id="playerWrap">
+      <div class="phead">
+        <button class="back" id="backBtn">→</button>
+        <h3 id="playerTitle"></h3>
+      </div>
+      <div class="frame"><iframe id="liveFrame" src="" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe></div>
+    </div>
+  </section>
+
+  <!-- MUSIC VIEW -->
+  <section id="v-music" class="view">
+    <div class="searchbar">
+      <input id="q" enterkeyhint="search" placeholder="ابحثي عن أغنية، فنان…">
+      <button id="qBtn" aria-label="بحث"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></button>
+    </div>
+    <div id="qRes"></div>
+    <div id="homeSongs">
+      <h2 class="sec"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg> أغانيي</h2>
+      <div id="songList"></div>
+      <h2 class="sec"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg> سمعتي مؤخراً</h2>
+      <div id="recentList"></div>
+    </div>
+  </section>
+</main>
+
+<!-- now playing -->
+<div id="np">
+  <img src="icons/icon-192.png" alt="">
+  <div class="t"><h4 id="npTitle">—</h4><div class="bar"><i id="npProg"></i></div></div>
+  <button id="npPrev" title="السابق"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6l8.5 6L6 18V6zM16 6h2v12h-2V6z"/></svg></button>
+  <button id="npPlay" class="main" title="تشغيل/إيقاف"><svg id="npPlayIc" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
+  <button id="npNext" title="التالي"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 6l-8.5 6L18 18V6zM6 6h2v12H6V6z"/></svg></button>
+</div>
+<div id="hiddenPlayer"></div>
+
+<nav>
+  <button id="tab-live" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="2" fill="currentColor" stroke="none"/><path d="M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8"/></svg>البث المباشر</button>
+  <button id="tab-music"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>الموسيقى</button>
+</nav>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+<script>
+const SVG = {
+  kaaba: '<svg viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="13" rx="2" fill="#151528"/><rect x="4" y="10.2" width="16" height="2.4" fill="#d4af37"/><path d="M9 10.2v2.4M12 10.2v2.4M15 10.2v2.4" stroke="#151528" stroke-width=".7"/></svg>',
+  mosque: '<svg viewBox="0 0 24 24" fill="#d8b4fe"><path d="M12 2.6l1 1.9c2 .7 3.4 2 4.2 4h2.3v2.8h-2v8.2h-2.6v-8.2h-5.8v8.2H6.5v-8.2h-2V8.5h2.3c.8-2 2.2-3.3 4.2-4l1-1.9z"/><rect x="2.4" y="4" width="1.7" height="15.5" rx=".85"/><rect x="19.9" y="4" width="1.7" height="15.5" rx=".85"/></svg>',
+  tv: '<svg viewBox="0 0 24 24" fill="none" stroke="#d8b4fe" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="6" width="18" height="12" rx="3"/><path d="M10 9.5l5 2.5-5 2.5z" fill="#d8b4fe" stroke="none"/></svg>',
+  note: '<svg viewBox="0 0 24 24" fill="#fff"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>',
+  play: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>',
+  pause: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>',
+  heart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>'
+};
+const DEFAULT_LIVE = [
+  {id:'eC4LfEVxvKg', name:'مكة المكرمة', sub:'المسجد الحرام', tile:'kaaba', art:'kaaba'},
+  {id:'Rs7St51oDDc', name:'المدينة المنورة', sub:'المسجد النبوي', tile:'mosque', art:'mosque'},
+];
+const store = {
+  get(k,d){ try{ const v=localStorage.getItem('watar_'+k); return v?JSON.parse(v):d; }catch(e){ return d; } },
+  set(k,v){ try{ localStorage.setItem('watar_'+k, JSON.stringify(v)); }catch(e){} }
+};
+let customLive = store.get('live', []);
+let songs = store.get('songs', []);
+
+function parseYT(url){
+  url=(url||'').trim();
+  let m=url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|live\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  if(m) return m[1];
+  if(/^[A-Za-z0-9_-]{11}$/.test(url)) return url;
+  return null;
+}
+
+/* ---------- LIVE ---------- */
+const liveGrid=document.getElementById('liveGrid');
+function renderLive(){
+  liveGrid.innerHTML='';
+  [...DEFAULT_LIVE, ...customLive].forEach((ch,i)=>{
+    const d=document.createElement('div'); d.className='card';
+    d.innerHTML=`<span class="live-dot"><i></i>مباشر</span>
+      <div class="tile ${ch.tile||'generic'}">${SVG[ch.art||'tv']}</div><h3>${esc(ch.name)}</h3><p>${esc(ch.sub||'بث مباشر')}</p>
+      ${i>=DEFAULT_LIVE.length?'<button class="del" data-i="'+(i-DEFAULT_LIVE.length)+'" style="position:absolute;bottom:8px;left:10px;background:none;border:none;color:var(--mut);font-size:16px;">✕</button>':''}`;
+    d.onclick=(e)=>{ if(e.target.classList.contains('del')){ customLive.splice(+e.target.dataset.i,1); store.set('live',customLive); renderLive(); return; } openLive(ch); };
+    liveGrid.appendChild(d);
+  });
+}
+function esc(s){ return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+const playerWrap=document.getElementById('playerWrap'), liveFrame=document.getElementById('liveFrame');
+function openLive(ch){
+  pauseMusic();
+  document.getElementById('playerTitle').textContent=ch.name+' — بث مباشر';
+  liveFrame.src=`https://www.youtube.com/embed/${ch.id}?autoplay=1&rel=0&playsinline=1`;
+  playerWrap.classList.add('on');
+  playerWrap.scrollIntoView({behavior:'smooth',block:'start'});
+}
+document.getElementById('backBtn').onclick=()=>{ liveFrame.src=''; playerWrap.classList.remove('on'); };
+const liveSheet=document.getElementById('liveSheet');
+document.getElementById('addLiveBtn').onclick=()=>liveSheet.classList.toggle('on');
+document.getElementById('cancelLive').onclick=()=>liveSheet.classList.remove('on');
+document.getElementById('saveLive').onclick=()=>{
+  const id=parseYT(document.getElementById('liveUrl').value);
+  if(!id){ alert('الرابط مو صحيح — تأكدي منه'); return; }
+  const name=document.getElementById('liveName').value.trim()||'قناة جديدة';
+  customLive.push({id,name,sub:'بث مباشر',tile:'generic',art:'tv'});
+  store.set('live',customLive); renderLive();
+  document.getElementById('liveUrl').value=''; document.getElementById('liveName').value='';
+  liveSheet.classList.remove('on');
+};
+
+/* ---------- MUSIC ---------- */
+let player=null, pIdx=-1, pTimer=null, playList=[], curId=null;
+let recents = store.get('recent', []);
+const SEARCH_APIS=['https://invidious.f5.si'];
+
+function onYouTubeIframeAPIReady(){
+  player=new YT.Player('hiddenPlayer',{height:'1',width:'1',playerVars:{rel:0},events:{onStateChange:onPState}});
+}
+function onPState(e){
+  const playing=(e.data===YT.PlayerState.PLAYING);
+  const ic=document.getElementById('npPlayIc');
+  if(ic) ic.outerHTML=(playing?SVG.pause:SVG.play).replace('<svg','<svg id="npPlayIc"');
+  document.querySelectorAll('[data-track]').forEach(el=>el.classList.toggle('playing', el.dataset.track===curId&&playing));
+  clearInterval(pTimer);
+  if(playing){
+    pTimer=setInterval(()=>{ try{ const c=player.getCurrentTime(), d=player.getDuration(); if(d>0) document.getElementById('npProg').style.width=(c/d*100)+'%'; }catch(_){} },500);
+  }
+  if(e.data===YT.PlayerState.ENDED) nextTrack();
+}
+function playFromList(list,i,pushRec){
+  if(!player||!list[i]) return;
+  if(liveFrame.src){ liveFrame.src=''; playerWrap.classList.remove('on'); }
+  playList=list; pIdx=i; curId=list[i].id;
+  document.getElementById('npTitle').textContent=list[i].title;
+  document.getElementById('np').classList.add('on');
+  document.getElementById('npProg').style.width='0';
+  player.loadVideoById(list[i].id);
+  if(pushRec) pushRecent(list[i].id, list[i].title);
+  document.querySelectorAll('[data-track]').forEach(el=>el.classList.remove('playing'));
+}
+function pauseMusic(){ try{ player&&player.pauseVideo(); }catch(e){} }
+function nextTrack(){ if(playList.length) playFromList(playList,(pIdx+1)%playList.length); }
+function prevTrack(){ if(playList.length) playFromList(playList,(pIdx-1+playList.length)%playList.length); }
+document.getElementById('npPlay').onclick=()=>{ if(!player) return;
+  try{ if(player.getPlayerState()===YT.PlayerState.PLAYING) player.pauseVideo(); else if(playList.length) player.playVideo(); }catch(e){} };
+document.getElementById('npNext').onclick=nextTrack;
+document.getElementById('npPrev').onclick=prevTrack;
+
+/* search — YouTube-like */
+function fmtDur(s){ s=Math.floor(+s||0); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
+async function ytSearch(q){
+  for(const base of SEARCH_APIS){
+    try{
+      const ctl=new AbortController(); const t=setTimeout(()=>ctl.abort(),12000);
+      const r=await fetch(base+'/api/v1/search?q='+encodeURIComponent(q)+'&type=video',{signal:ctl.signal});
+      clearTimeout(t);
+      if(!r.ok) continue;
+      const j=await r.json();
+      const v=j.filter(x=>x&&x.type==='video'&&x.videoId).slice(0,20);
+      if(v.length) return v;
+    }catch(e){}
+  }
+  return null;
+}
+const qRes=document.getElementById('qRes'), homeSongs=document.getElementById('homeSongs');
+function clearSearch(){ qRes.innerHTML=''; homeSongs.style.display=''; document.getElementById('q').value=''; }
+async function doSearch(){
+  const q=document.getElementById('q').value.trim();
+  if(!q) return;
+  homeSongs.style.display='none';
+  qRes.innerHTML='<div class="spin"><i></i>جاي أبحث…</div>';
+  const res=await ytSearch(q);
+  qRes.innerHTML='';
+  const back=document.createElement('button'); back.className='btn ghost'; back.style.marginBottom='12px'; back.textContent='رجوع';
+  back.onclick=clearSearch; qRes.appendChild(back);
+  if(!res){ const d=document.createElement('div'); d.className='empty'; d.textContent='البحث متوقف حالياً — حاولي بعد شوي'; qRes.appendChild(d); return; }
+  res.forEach(v=>{
+    const d=document.createElement('div'); d.className='res'; d.dataset.track=v.videoId;
+    const isFav=songs.some(s=>s.id===v.videoId);
+    d.innerHTML='<img loading="lazy" src="https://i.ytimg.com/vi/'+v.videoId+'/mqdefault.jpg" alt="">'+
+      '<div class="t"><h4>'+esc(v.title)+'</h4><p>'+esc(v.author||'')+(v.lengthSeconds?' • '+fmtDur(v.lengthSeconds):'')+'</p></div>'+
+      '<button class="fav'+(isFav?' on':'')+'">'+SVG.heart+'</button>';
+    d.onclick=(e)=>{
+      const fb=e.target.closest('.fav');
+      if(fb){ toggleFav(v.videoId,v.title,fb); return; }
+      playFromList([{id:v.videoId,title:v.title}],0,true);
+    };
+    qRes.appendChild(d);
+  });
+}
+document.getElementById('qBtn').onclick=doSearch;
+document.getElementById('q').addEventListener('keydown',e=>{ if(e.key==='Enter') doSearch(); });
+
+/* favorites + recently played */
+function toggleFav(id,title,btn){
+  const i=songs.findIndex(s=>s.id===id);
+  if(i>=0){ songs.splice(i,1); if(btn) btn.classList.remove('on'); }
+  else{ songs.unshift({id:id,title:title}); if(btn) btn.classList.add('on'); }
+  store.set('songs',songs); renderSongs();
+}
+function pushRecent(id,title){
+  recents=recents.filter(r=>r.id!==id);
+  recents.unshift({id:id,title:title});
+  recents=recents.slice(0,20);
+  store.set('recent',recents); renderRecent();
+}
+const songList=document.getElementById('songList'), recentList=document.getElementById('recentList');
+function trackRow(s,del){
+  const d=document.createElement('div'); d.className='song'; d.dataset.track=s.id;
+  d.innerHTML='<div class="n">'+SVG.note+'</div><h4>'+esc(s.title)+'</h4>'+(del?'<button class="del">✕</button>':'');
+  d.onclick=(e)=>{
+    if(del&&e.target.classList.contains('del')){ songs=songs.filter(x=>x.id!==s.id); store.set('songs',songs); renderSongs(); return; }
+    const list=del?songs:recents;
+    const i=list.findIndex(x=>x.id===s.id);
+    playFromList(list,i,true);
+  };
+  return d;
+}
+function renderSongs(){
+  songList.innerHTML='';
+  if(!songs.length){ songList.innerHTML='<div class="empty">بعد ما حفظتي شي — ابحثي ودوسي على القلب لحفظ الأغنية</div>'; return; }
+  songs.forEach(s=>songList.appendChild(trackRow(s,true)));
+}
+function renderRecent(){
+  recentList.innerHTML='';
+  if(!recents.length){ recentList.innerHTML='<div class="empty">بعدچ ما سمعتي شي</div>'; return; }
+  recents.forEach(s=>recentList.appendChild(trackRow(s,false)));
+}
+renderSongs(); renderRecent();
+/* ---------- TABS ---------- */
+const tabs={live:document.getElementById('v-live'), music:document.getElementById('v-music')};
+function goTab(k){
+  Object.entries(tabs).forEach(([key,el])=>el.classList.toggle('on', key===k));
+  document.getElementById('tab-live').classList.toggle('on', k==='live');
+  document.getElementById('tab-music').classList.toggle('on', k==='music');
+  window.scrollTo({top:0});
+}
+document.getElementById('tab-live').onclick=()=>goTab('live');
+document.getElementById('tab-music').onclick=()=>goTab('music');
+
+renderLive(); renderSongs();
+</script>
+</body>
+</html>
